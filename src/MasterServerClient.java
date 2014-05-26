@@ -8,13 +8,16 @@ import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Map;
 
 public class MasterServerClient extends java.rmi.server.UnicastRemoteObject
 		implements MasterServerClientInterface {
 
 	String address;
 	Registry registry;
+	// contain the replica address in theis form name,ip:portnumber
 	HashMap<String, String> repAddress = new HashMap<String, String>();
+	//contain the primary replica for the file
 	HashMap<String, ArrayList<String>> filesRep = new HashMap<String, ArrayList<String>>();
 
 	public MasterServerClient() throws IOException {
@@ -40,7 +43,8 @@ public class MasterServerClient extends java.rmi.server.UnicastRemoteObject
 				"repServers.txt"));
 		String s;
 		String st[];
-		// add the reblicas to hashmap its name is key and the address is the value
+		// add the reblicas to hashmap its name is key and the address is the
+		// value
 		while ((s = reader.readLine()) != null) {
 			st = s.split(":");
 			ReplicaServerClient rep = new ReplicaServerClient(st[0], st[1],
@@ -48,7 +52,8 @@ public class MasterServerClient extends java.rmi.server.UnicastRemoteObject
 			repAddress.put(st[0], st[1] + ":" + st[2]);
 		}
 		reader = new BufferedReader(new FileReader("repFiles.txt"));
-		// add the primary replicas of the files to hasmap the file name is key and the replica list is the value
+		// add the primary replicas of the files to hasmap the file name is key
+		// and the replica list is the value
 		while ((s = reader.readLine()) != null) {
 			st = s.split(":");
 			ArrayList<String> lis;
@@ -69,14 +74,16 @@ public class MasterServerClient extends java.rmi.server.UnicastRemoteObject
 		if (!filesRep.containsKey(fileName))
 			throw new FileNotFoundException();
 		else {
-			ArrayList<String> reps = filesRep.get(fileName);
-			ReplicaLoc[] locs = new ReplicaLoc[reps.size()];
+
+			ReplicaLoc[] locs = new ReplicaLoc[repAddress.size()];
 			int top = 0;
-			for (String repName : reps) {
-				String address[] = repAddress.get(repName).split(":");
-				locs[top++] = new ReplicaLoc(repName, address[0],
-						Integer.parseInt(address[1]));
+			String st[];
+			for (Map.Entry<String, String> e : repAddress.entrySet()) {
+				st = e.getValue().split(":");
+				locs[top++] = new ReplicaLoc(e.getKey(), st[0],
+						Integer.parseInt(st[1]));
 			}
+
 			return locs;
 		}
 	}
