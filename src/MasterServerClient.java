@@ -9,16 +9,20 @@ import java.rmi.registry.Registry;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Random;
 
+@SuppressWarnings("serial")
 public class MasterServerClient extends java.rmi.server.UnicastRemoteObject
 		implements MasterServerClientInterface {
 
 	String address;
 	Registry registry;
-	// contain the replica address in theis form name,ip:portnumber
+	// contain the replica address in this form: name,ip:portnumber
 	HashMap<String, String> repAddress = new HashMap<String, String>();
-	//contain the primary replica for the file
+	// contain the primary replica for the file
 	HashMap<String, ArrayList<String>> filesRep = new HashMap<String, ArrayList<String>>();
+
+	private long transSeq;
 
 	public MasterServerClient() throws IOException {
 		try {
@@ -36,6 +40,7 @@ public class MasterServerClient extends java.rmi.server.UnicastRemoteObject
 			System.out.println("remote exception" + e);
 		}
 		initReplicas();
+		transSeq = 0;
 	}
 
 	public void initReplicas() throws IOException {
@@ -91,8 +96,38 @@ public class MasterServerClient extends java.rmi.server.UnicastRemoteObject
 
 	@Override
 	public WriteMsg write(FileContent data) throws RemoteException, IOException {
-		// TODO Auto-generated method stub
-		return null;
+		String fileName = data.getFileName();
+		WriteMsg wmsg;
+		if (!filesRep.containsKey(fileName)) {
+			Random rand = new Random(System.currentTimeMillis());
+			int randReplica = rand.nextInt(repAddress.size());
+			int i = 0;
+			ReplicaLoc repLoc = null;
+			for (Map.Entry<String, String> e : repAddress.entrySet()) {
+				if (i == randReplica) {
+					String[] val = e.getValue().split(":");
+					repLoc = new ReplicaLoc(e.getKey(), val[0],
+							Integer.parseInt(val[1]));
+					break;
+				}
+			}
+			long transId = getTransactionId();
+			long timestamp = System.currentTimeMillis();
+			wmsg = new WriteMsg(transId, timestamp, repLoc);
+		} else {
+			String primaryReplica = filesRep.get(fileName).get(0);
+			String replicaAddress[] = repAddress.get(primaryReplica).split(":");
+			long transId = getTransactionId();
+			long timestamp = System.currentTimeMillis();
+			ReplicaLoc repLoc = new ReplicaLoc(primaryReplica,
+					replicaAddress[0], Integer.parseInt(replicaAddress[1]));
+			wmsg = new WriteMsg(transId, timestamp, repLoc);
+		}
+		return wmsg;
+	}
+
+	private synchronized long getTransactionId() {
+		return ++transSeq;
 	}
 
 	public static void main(String[] args) throws IOException {
