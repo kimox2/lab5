@@ -40,16 +40,21 @@ public class Client {
 
 	public void read(String fileName) throws FileNotFoundException,
 			RemoteException, IOException {
+		//get master server
 		MasterServerClientInterface mServer = connectMaster();
+		//get set of replicas ip addresses
 		ReplicaLoc repServerLocs[] = mServer.read(fileName);
+		//choose one
 		ReplicaLoc repServerLoc = repServerLocs[0];
+		//connect to it
 		ReplicaServerClientInterface repServer = connectReplica(repServerLoc);
+		//read file from it
 		FileContent fc = repServer.read(fileName);
 		System.out.println(fc.getFileDate());
 	}
 
 	public void start() throws FileNotFoundException, RemoteException, IOException {
-		read("f1.txt");
+		read("f2.txt");
 	}
 
 	public static void main(String[] args) throws FileNotFoundException,

@@ -40,6 +40,7 @@ public class MasterServerClient extends java.rmi.server.UnicastRemoteObject
 				"repServers.txt"));
 		String s;
 		String st[];
+		// add the reblicas to hashmap its name is key and the address is the value
 		while ((s = reader.readLine()) != null) {
 			st = s.split(":");
 			ReplicaServerClient rep = new ReplicaServerClient(st[0], st[1],
@@ -47,7 +48,7 @@ public class MasterServerClient extends java.rmi.server.UnicastRemoteObject
 			repAddress.put(st[0], st[1] + ":" + st[2]);
 		}
 		reader = new BufferedReader(new FileReader("repFiles.txt"));
-		// add the primary replicas of the files
+		// add the primary replicas of the files to hasmap the file name is key and the replica list is the value
 		while ((s = reader.readLine()) != null) {
 			st = s.split(":");
 			ArrayList<String> lis;
@@ -64,7 +65,7 @@ public class MasterServerClient extends java.rmi.server.UnicastRemoteObject
 	@Override
 	public ReplicaLoc[] read(String fileName) throws FileNotFoundException,
 			IOException, RemoteException {
-		System.out.println("nice");
+		// search for file in hashmap and get it's replicas address
 		if (!filesRep.containsKey(fileName))
 			throw new FileNotFoundException();
 		else {

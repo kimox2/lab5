@@ -43,6 +43,7 @@ public class ReplicaServerClient extends java.rmi.server.UnicastRemoteObject
 	@Override
 	public FileContent read(String fileName) throws FileNotFoundException,
 			IOException, RemoteException {
+		// the check file in the directory ./replica name
 		String path = "./" + name + "/" + fileName;
 		File f = new File(path);
 		if (!f.exists())
