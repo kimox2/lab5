@@ -37,7 +37,7 @@ public class MasterServerClient  extends java.rmi.server.UnicastRemoteObject imp
 	@Override
 	public ReplicaLoc[] read(String fileName) throws FileNotFoundException,
 			IOException, RemoteException {
-		// TODO Auto-generated method stub
+		
 		return null;
 	}
 
