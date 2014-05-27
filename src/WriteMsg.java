@@ -1,5 +1,9 @@
+import java.io.Serializable;
 
-public class WriteMsg {
+
+public class WriteMsg implements Serializable{
+	
+	private static final long serialVersionUID = 3001497005646175739L;
 	private long transactionId;
 	private  long timeStamp;
 	private ReplicaLoc loc;

@@ -43,4 +43,6 @@ public interface ReplicaServerClientInterface extends Remote {
 	 * @throws RemoteException
 	 */
 	public boolean abort(long txnID) throws RemoteException;
+	
+	public boolean atomicWrite(FileContent file)throws RemoteException;
 }

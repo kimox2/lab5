@@ -1,6 +1,8 @@
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.rmi.RemoteException;
@@ -15,22 +17,25 @@ import java.util.Random;
 public class MasterServerClient extends java.rmi.server.UnicastRemoteObject
 		implements MasterServerClientInterface {
 
-	String address;
-	Registry registry;
+	private String address;
+	private String mAddress;
+	private int port;
+	private Registry registry;
 	// contain the replica address in this form: name,ip:portnumber
-	HashMap<String, String> repAddress = new HashMap<String, String>();
+	private HashMap<String, String> repAddress = new HashMap<String, String>();
 	// contain the primary replica for the file
-	HashMap<String, ArrayList<String>> filesRep = new HashMap<String, ArrayList<String>>();
+	private HashMap<String, ArrayList<String>> filesRep = new HashMap<String, ArrayList<String>>();
 
 	private long transSeq;
 
 	public MasterServerClient() throws IOException {
 		try {
 			address = (InetAddress.getLocalHost()).toString();
+			this.mAddress = "127.0.1.1";
 		} catch (Exception e) {
 			System.out.println("can't get inet address.");
 		}
-		int port = 3030;
+		port = 3030;
 		System.out.println("this address=" + address + ",port=" + port);
 		try {
 			registry = LocateRegistry.createRegistry(port);
@@ -53,9 +58,10 @@ public class MasterServerClient extends java.rmi.server.UnicastRemoteObject
 		while ((s = reader.readLine()) != null) {
 			st = s.split(":");
 			ReplicaServerClient rep = new ReplicaServerClient(st[0], st[1],
-					Integer.parseInt(st[2]));
+					Integer.parseInt(st[2]), this.mAddress, this.port);
 			repAddress.put(st[0], st[1] + ":" + st[2]);
 		}
+		reader.close();
 		reader = new BufferedReader(new FileReader("repFiles.txt"));
 		// add the primary replicas of the files to hasmap the file name is key
 		// and the replica list is the value
@@ -70,6 +76,7 @@ public class MasterServerClient extends java.rmi.server.UnicastRemoteObject
 			lis.add(st[1]);
 			filesRep.put(st[0], lis);
 		}
+		reader.close();
 	}
 
 	@Override
@@ -110,6 +117,7 @@ public class MasterServerClient extends java.rmi.server.UnicastRemoteObject
 							Integer.parseInt(val[1]));
 					break;
 				}
+				i++;
 			}
 			long transId = getTransactionId();
 			long timestamp = System.currentTimeMillis();
@@ -129,10 +137,32 @@ public class MasterServerClient extends java.rmi.server.UnicastRemoteObject
 	private synchronized long getTransactionId() {
 		return ++transSeq;
 	}
-
+	
+	
 	public static void main(String[] args) throws IOException {
 		MasterServerClient msc = new MasterServerClient();
 
+	}
+
+	@Override
+	public boolean updateMetaData(String fileName, String primaryReplica) throws RemoteException {
+		try
+		{
+			if(filesRep.containsKey(fileName))
+				return true;
+			
+			BufferedWriter bw = new BufferedWriter(new FileWriter("repFiles.txt", true));
+			bw.write("\n"+fileName+":"+primaryReplica);
+			bw.flush();
+			bw.close();
+			ArrayList<String> list = new ArrayList<String>();
+			list.add(primaryReplica);
+			filesRep.put(fileName, list);
+			return true;
+		}catch(Exception e)
+		{
+			return false;
+		}
 	}
 
 }

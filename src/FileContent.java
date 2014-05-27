@@ -6,15 +6,15 @@ public class FileContent implements Serializable {
 	 */
 	private static final long serialVersionUID = 3001497005646175737L;
 	String fileName;
-	String fileDate;
+	String fileData;
 
-	public FileContent(String fileName, String fileDate) {
-		this.fileDate = fileDate;
+	public FileContent(String fileName, String fileData) {
+		this.fileData = fileData;
 		this.fileName = fileName;
 	}
 
-	public void setFileDate(String fileDate) {
-		this.fileDate = fileDate;
+	public void setFileData(String fileData) {
+		this.fileData = fileData;
 	}
 
 	public void setFileName(String fileName) {
@@ -25,8 +25,8 @@ public class FileContent implements Serializable {
 		return fileName;
 	}
 
-	public String getFileDate() {
-		return fileDate;
+	public String getFileData() {
+		return fileData;
 	}
 
 }

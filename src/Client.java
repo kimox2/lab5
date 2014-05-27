@@ -50,7 +50,25 @@ public class Client {
 		ReplicaServerClientInterface repServer = connectReplica(repServerLoc);
 		//read file from it
 		FileContent fc = repServer.read(fileName);
-		System.out.println(fc.getFileDate());
+		System.out.println(fc.getFileData());
+		
+		FileContent fcw = new FileContent("TestHossam.txt", "");
+		WriteMsg wm = mServer.write(fcw);
+		ReplicaServerClientInterface repServer2 = connectReplica(wm.getLoc());
+		fcw.setFileData("Hello Hossam1\n");
+		repServer2.write(wm.getTransactionId(), 1, fcw);
+		fcw.setFileData("Hello Hossam2\n");
+		repServer2.write(wm.getTransactionId(), 2, fcw);
+		try {
+			boolean bl = repServer2.commit(wm.getTransactionId(), 2);
+			System.out.println(bl);
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		
+		
 	}
 
 	public void start() throws FileNotFoundException, RemoteException, IOException {
