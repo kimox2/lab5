@@ -139,10 +139,16 @@ public class ReplicaServerClient extends java.rmi.server.UnicastRemoteObject
 		String fileName = transFileMap.get(txnID);
 		Object mutex = filesMutex.get(fileName);
 		int msgsSize = transactions.get(txnID).size();
-
-		if (numOfMsgs != msgsSize)
+		System.out.println(numOfMsgs + " " + msgsSize);
+		try {
+			masterServer.releaseSem(fileName);
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		if (numOfMsgs != msgsSize) {
 			throw new MessageNotFoundException();
-
+		}
 		synchronized (mutex) {
 			try {
 				File f2 = new File("./" + this.name + "/" + fileName);
@@ -169,21 +175,31 @@ public class ReplicaServerClient extends java.rmi.server.UnicastRemoteObject
 				transactions.remove(txnID);
 				transFileMap.remove(txnID);
 				boolean b = masterServer.updateMetaData(fileName, this.name);
+				// masterServer.releaseSem(fileName);
 				return b;
 			} catch (Exception e) {
+
 				return false;
 			}
 
 		}
+
 	}
 
 	@Override
 	public boolean abort(long txnID) throws RemoteException {
 		// TODO Auto-generated method stub
+
 		if (!transactions.containsKey(txnID))
 			return false;
 
 		String fileName = transFileMap.get(txnID);
+		try {
+			masterServer.releaseSem(fileName);
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		File f = new File("tmp" + txnID + "-" + fileName);
 		f.delete();
 		transFileMap.remove(txnID);

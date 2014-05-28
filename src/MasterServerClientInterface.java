@@ -27,4 +27,5 @@ public interface MasterServerClientInterface extends Remote {
 	public WriteMsg write(FileContent data) throws RemoteException, IOException;
 	
 	public boolean updateMetaData(String fileName, String primaryReplica)throws RemoteException;
+	public boolean releaseSem(String fileName)throws Exception;
 }

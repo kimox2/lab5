@@ -12,6 +12,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
+import java.util.concurrent.Semaphore;
 
 @SuppressWarnings("serial")
 public class MasterServerClient extends java.rmi.server.UnicastRemoteObject
@@ -27,6 +28,8 @@ public class MasterServerClient extends java.rmi.server.UnicastRemoteObject
 	private HashMap<String, ArrayList<String>> filesRep = new HashMap<String, ArrayList<String>>();
 
 	private long transSeq;
+
+	private HashMap<String, Semaphore> sems = new HashMap<String, Semaphore>();
 
 	public MasterServerClient() throws IOException {
 		try {
@@ -102,8 +105,19 @@ public class MasterServerClient extends java.rmi.server.UnicastRemoteObject
 	}
 
 	@Override
-	public WriteMsg write(FileContent data) throws RemoteException, IOException {
+	public WriteMsg write(FileContent data) throws RemoteException,
+			IOException {
 		String fileName = data.getFileName();
+		if (!sems.containsKey(fileName)) {
+			sems.put(fileName, new Semaphore(1));
+		}
+		Semaphore sem = sems.get(fileName);
+		try {
+			sem.acquire();
+		} catch (InterruptedException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
 		WriteMsg wmsg;
 		if (!filesRep.containsKey(fileName)) {
 			Random rand = new Random(System.currentTimeMillis());
@@ -135,34 +149,41 @@ public class MasterServerClient extends java.rmi.server.UnicastRemoteObject
 	}
 
 	private synchronized long getTransactionId() {
+
 		return ++transSeq;
 	}
-	
-	
+
 	public static void main(String[] args) throws IOException {
 		MasterServerClient msc = new MasterServerClient();
 
 	}
 
 	@Override
-	public boolean updateMetaData(String fileName, String primaryReplica) throws RemoteException {
-		try
-		{
-			if(filesRep.containsKey(fileName))
+	public boolean updateMetaData(String fileName, String primaryReplica)
+			throws RemoteException {
+		try {
+			if (filesRep.containsKey(fileName))
 				return true;
-			
-			BufferedWriter bw = new BufferedWriter(new FileWriter("repFiles.txt", true));
-			bw.write("\n"+fileName+":"+primaryReplica);
+
+			BufferedWriter bw = new BufferedWriter(new FileWriter(
+					"repFiles.txt", true));
+			bw.write("\n" + fileName + ":" + primaryReplica);
 			bw.flush();
 			bw.close();
 			ArrayList<String> list = new ArrayList<String>();
 			list.add(primaryReplica);
 			filesRep.put(fileName, list);
 			return true;
-		}catch(Exception e)
-		{
+		} catch (Exception e) {
 			return false;
 		}
+	}
+
+	@Override
+	public boolean releaseSem(String fileName) throws Exception {
+		Semaphore sem = sems.get(fileName);
+		sem.release();
+		return true;
 	}
 
 }
