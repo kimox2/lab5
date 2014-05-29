@@ -55,24 +55,25 @@ public class MasterServerClient extends java.rmi.server.UnicastRemoteObject
 	}
 
 	public void initReplicas() throws IOException {
-		BufferedReader reader = new BufferedReader(new FileReader(
-				"repServers.txt"));
+		BufferedReader reader = new BufferedReader(new FileReader("repServers.txt"));
 		String s;
 		String st[];
 		// add the reblicas to hashmap its name is key and the address is the
 		// value
 		while ((s = reader.readLine()) != null) {
 			st = s.split(":");
-			ReplicaServerClient rep = new ReplicaServerClient(st[0], st[1],
-					Integer.parseInt(st[2]), this.mAddress, this.port);
+			/*ReplicaServerClient rep = new ReplicaServerClient(st[0], st[1],
+					Integer.parseInt(st[2]), this.mAddress, this.port);*/
 			
 			String sshReplica = "ssh hossam@"+st[1]+" java ReplicaServerClient "+st[0]+" "+st[1]+" "
 									+st[2]+" "+this.mAddress+" "+this.port+" "+this.dir;
 			
-			String sshReplica2 = "ssh hossam@"+st[1]+" java -cp workspace/ReplicaServer/bin ReplicaServerClient "+st[0]+" "+st[1]+" "
-									+st[2]+" "+this.mAddress+" "+this.port+" "+this.dir;
+			String sshReplica2 = "ssh hossam@"+st[1]+" java -cp /home/hossam/workspace/ReplicaServer/bin/ ReplicaServerClient "
+									+st[0]+" "+st[1]+" "+st[2]+" "+this.mAddress+" "+this.port+" "+this.dir;
+			
 			Process p = Runtime.getRuntime().exec(sshReplica2);
 			
+
 			repAddress.put(st[0], st[1] + ":" + st[2]);
 			
 		}
@@ -127,7 +128,6 @@ public class MasterServerClient extends java.rmi.server.UnicastRemoteObject
 		try {
 			sem.acquire();
 		} catch (InterruptedException e1) {
-			// TODO Auto-generated catch block
 			e1.printStackTrace();
 		}
 		WriteMsg wmsg;
@@ -201,7 +201,7 @@ public class MasterServerClient extends java.rmi.server.UnicastRemoteObject
 		String masterDir = args[5];*/
 		String masterAddress = "127.0.1.1";
 		int masterPort = 3033;
-		String masterDir = "Dir-Files";
+		String masterDir = "DirFiles";
 		System.out.println(masterAddress);
 		System.out.println(masterPort);
 		System.out.println(masterDir);

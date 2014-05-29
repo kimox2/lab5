@@ -12,7 +12,7 @@ public class Client {
 		MasterServerClientInterface rmiServer = null;
 		Registry registry;
 		String serverAddress = "127.0.1.1";
-		String serverPort = "3030";
+		String serverPort = "3033";
 		try {
 			registry = LocateRegistry.getRegistry(serverAddress, (new Integer(
 					serverPort)).intValue());
@@ -273,7 +273,6 @@ public class Client {
 		fcw.setFileData("Hello sala72\n");
 		repServer2.write(wm.getTransactionId(), 2, fcw);
 		try {
-
 			boolean bl = repServer2.commit(wm.getTransactionId(), 3);
 			System.out.println(bl);
 		} catch (Exception e) {
@@ -286,10 +285,11 @@ public class Client {
 	public static void main(String[] args) throws FileNotFoundException,
 			IOException {
 		Client c = new Client();
-		int op = Integer.parseInt(args[0]);
+//		c.write2();
+		/*int op = Integer.parseInt(args[0]);
 		if (op == 1)
 			c.write1();
-		else
+		else*/
 			c.write2();
 
 	}

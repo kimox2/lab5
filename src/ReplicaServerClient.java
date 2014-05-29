@@ -10,6 +10,7 @@ import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 
 public class ReplicaServerClient extends java.rmi.server.UnicastRemoteObject
@@ -29,11 +30,16 @@ public class ReplicaServerClient extends java.rmi.server.UnicastRemoteObject
 	private MasterServerClientInterface masterServer;
 	private String masterAddress;
 	private int masterPort;
+	private String directoryPath;
 
 	protected ReplicaServerClient(String name, String address, int portNumber,
-			String masterAddress, int masterPort) throws RemoteException,
-			IOException {
+			String masterAddress, int masterPort, String directoryPath)
+			throws RemoteException, IOException {
 		// super();
+		this.directoryPath = directoryPath;
+		String dirPath = "./" + name + "/" + directoryPath;
+		File f = new File(dirPath);
+		f.mkdir();
 		this.name = name;
 		this.address = address;
 		this.portNumber = portNumber;
@@ -106,7 +112,7 @@ public class ReplicaServerClient extends java.rmi.server.UnicastRemoteObject
 	public FileContent read(String fileName) throws FileNotFoundException,
 			IOException, RemoteException {
 		// the check file in the directory ./replica name
-		String path = "./" + name + "/" + fileName;
+		String path = "./" + name + "/" + directoryPath + "/" + fileName;
 		File f = new File(path);
 		if (!f.exists())
 			throw new FileNotFoundException();
@@ -151,12 +157,15 @@ public class ReplicaServerClient extends java.rmi.server.UnicastRemoteObject
 		}
 		synchronized (mutex) {
 			try {
-				File f2 = new File("./" + this.name + "/" + fileName);
+				File f2 = new File("./" + name + "/" + directoryPath + "/"
+						+ fileName);
+				System.out.println(f2.getAbsolutePath());
 				if (!f2.exists())
 					f2.createNewFile();
 				BufferedWriter bw = new BufferedWriter(new FileWriter(f2, true));
 				FileContent fc = new FileContent(fileName, "");
 				boolean success = true;
+				String success2 = "";
 				for (int i = 1; i <= numOfMsgs; i++) {
 					String content = getContent("tmp" + txnID + "-" + i + "-"
 							+ fileName);
@@ -178,7 +187,8 @@ public class ReplicaServerClient extends java.rmi.server.UnicastRemoteObject
 				// masterServer.releaseSem(fileName);
 				return b;
 			} catch (Exception e) {
-
+				System.out.println(e.getMessage());
+				System.out.println(e.getStackTrace());
 				return false;
 			}
 
@@ -193,7 +203,15 @@ public class ReplicaServerClient extends java.rmi.server.UnicastRemoteObject
 		if (!transactions.containsKey(txnID))
 			return false;
 
+		int msgsSize = transactions.get(txnID).size();
 		String fileName = transFileMap.get(txnID);
+		for (int i = 1; i <= msgsSize; i++) {
+			String filePath = "tmp" + txnID + "-" + i + "-" + fileName;
+			File tmp = new File(filePath);
+			if (tmp.exists())
+				tmp.delete();
+		}
+
 		try {
 			masterServer.releaseSem(fileName);
 		} catch (Exception e) {
@@ -210,7 +228,8 @@ public class ReplicaServerClient extends java.rmi.server.UnicastRemoteObject
 	@Override
 	public boolean atomicWrite(FileContent file) throws RemoteException {
 		try {
-			File f = new File("./" + this.name + "/" + file.getFileName());
+			File f = new File("./" + this.name + "/" + directoryPath + "/"
+					+ file.getFileName());
 
 			if (!f.exists())
 				f.createNewFile();
@@ -265,4 +284,16 @@ public class ReplicaServerClient extends java.rmi.server.UnicastRemoteObject
 
 	}
 
+	public static void main(String[] args) throws RemoteException, IOException {
+		String name = args[0];
+		String address = args[1];
+		int portNumber = Integer.parseInt(args[2]);
+		String masterAddress = args[3];
+		int masterPort = Integer.parseInt(args[4]);
+		String directoryPath = args[5];
+
+		ReplicaServerClient rep = new ReplicaServerClient(name, address,
+				portNumber, masterAddress, masterPort, directoryPath);
+		;
+	}
 }
