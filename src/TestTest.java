@@ -38,10 +38,19 @@ public class TestTest {
 		Client c2 = new Client();
 		c2.abort2("newFile.txt");
 	}
+	
+	public static void test3() throws FileNotFoundException, RemoteException, IOException
+	{
+		Client c1 = new Client();
+		c1.write1("hossam.txt");
+		c1 = new Client();
+		c1.write2("hossam.txt");
+	}
 
 	public static void main(String[] args) throws FileNotFoundException, RemoteException, IOException {
-//		test1();
-		test2();
+		//test1();
+		//test2();
+		test3();
 	}
 
 }
