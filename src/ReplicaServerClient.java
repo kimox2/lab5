@@ -10,6 +10,7 @@ import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 
 public class ReplicaServerClient extends java.rmi.server.UnicastRemoteObject
@@ -165,6 +166,7 @@ public class ReplicaServerClient extends java.rmi.server.UnicastRemoteObject
 				BufferedWriter bw = new BufferedWriter(new FileWriter(f2, true));
 				FileContent fc = new FileContent(fileName, "");
 				boolean success = true;
+				String success2 = "";
 				for (int i = 1; i <= numOfMsgs; i++) {
 					String content = getContent("tmp" + txnID + "-" + i + "-"
 							+ fileName);

@@ -1,3 +1,5 @@
 f1.txt:rep1
 f2.txt:rep2
-TestHossam.txt:rep2
+salah.txt:rep1
+sale7.txt:rep2
+hossam.txt:rep1

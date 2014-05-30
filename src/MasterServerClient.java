@@ -22,6 +22,7 @@ public class MasterServerClient extends java.rmi.server.UnicastRemoteObject
 	private String mAddress;
 	private int port;
 	private Registry registry;
+	private String dir;
 	// contain the replica address in this form: name,ip:portnumber
 	private HashMap<String, String> repAddress = new HashMap<String, String>();
 	// contain the primary replica for the file
@@ -31,15 +32,17 @@ public class MasterServerClient extends java.rmi.server.UnicastRemoteObject
 
 	private HashMap<String, Semaphore> sems = new HashMap<String, Semaphore>();
 
-	public MasterServerClient() throws IOException {
+	public MasterServerClient(String masterAddress, int masterPort, String masterDir) throws IOException {
+		
+		this.mAddress = masterAddress;
+		this.port = masterPort;
+		this.dir = masterDir;
 		try {
 			address = (InetAddress.getLocalHost()).toString();
-			this.mAddress = "127.0.1.1";
 		} catch (Exception e) {
 			System.out.println("can't get inet address.");
 		}
-		port = 3030;
-		System.out.println("this address=" + address + ",port=" + port);
+		System.out.println("this address=" + this.mAddress + ",port=" + port);
 		try {
 			registry = LocateRegistry.createRegistry(port);
 			registry.rebind("MasterServerClient", this);
@@ -52,17 +55,27 @@ public class MasterServerClient extends java.rmi.server.UnicastRemoteObject
 	}
 
 	public void initReplicas() throws IOException {
-		BufferedReader reader = new BufferedReader(new FileReader(
-				"repServers.txt"));
+		BufferedReader reader = new BufferedReader(new FileReader("repServers.txt"));
 		String s;
 		String st[];
 		// add the reblicas to hashmap its name is key and the address is the
 		// value
 		while ((s = reader.readLine()) != null) {
 			st = s.split(":");
-			ReplicaServerClient rep = new ReplicaServerClient(st[0], st[1],
-					Integer.parseInt(st[2]), this.mAddress, this.port,"fis");
+			/*ReplicaServerClient rep = new ReplicaServerClient(st[0], st[1],
+					Integer.parseInt(st[2]), this.mAddress, this.port);*/
+			
+			String sshReplica = "ssh hossam@"+st[1]+" java ReplicaServerClient "+st[0]+" "+st[1]+" "
+									+st[2]+" "+this.mAddress+" "+this.port+" "+this.dir;
+			
+			String sshReplica2 = "ssh hossam@"+st[1]+" java -cp /home/hossam/workspace/ReplicaServer/bin/ ReplicaServerClient "
+									+st[0]+" "+st[1]+" "+st[2]+" "+this.mAddress+" "+this.port+" "+this.dir;
+			
+			Process p = Runtime.getRuntime().exec(sshReplica2);
+			
+
 			repAddress.put(st[0], st[1] + ":" + st[2]);
+			
 		}
 		reader.close();
 		reader = new BufferedReader(new FileReader("repFiles.txt"));
@@ -152,10 +165,7 @@ public class MasterServerClient extends java.rmi.server.UnicastRemoteObject
 		return ++transSeq;
 	}
 
-	public static void main(String[] args) throws IOException {
-		MasterServerClient msc = new MasterServerClient();
-
-	}
+	
 
 	@Override
 	public boolean updateMetaData(String fileName, String primaryReplica)
@@ -183,6 +193,20 @@ public class MasterServerClient extends java.rmi.server.UnicastRemoteObject
 		Semaphore sem = sems.get(fileName);
 		sem.release();
 		return true;
+	}
+	
+	public static void main(String[] args) throws IOException {
+		/*String masterAddress = args[1];
+		int masterPort = Integer.parseInt(args[3]);
+		String masterDir = args[5];*/
+		String masterAddress = "127.0.1.1";
+		int masterPort = 3033;
+		String masterDir = "DirFiles";
+		System.out.println(masterAddress);
+		System.out.println(masterPort);
+		System.out.println(masterDir);
+		MasterServerClient msc = new MasterServerClient(masterAddress, masterPort, masterDir);
+
 	}
 
 }
