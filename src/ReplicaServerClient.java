@@ -112,6 +112,7 @@ public class ReplicaServerClient extends java.rmi.server.UnicastRemoteObject
 			IOException, RemoteException {
 		// the check file in the directory ./replica name
 		String path = "./" + name + "/" + directoryPath + "/" + fileName;
+		System.out.println(path);
 		File f = new File(path);
 		if (!f.exists())
 			throw new FileNotFoundException();
@@ -211,10 +212,11 @@ public class ReplicaServerClient extends java.rmi.server.UnicastRemoteObject
 		}
 
 		try {
+			
 			masterServer.releaseSem(fileName);
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
-			e.printStackTrace();
+//			e.printStackTrace();
 		}
 		File f = new File("tmp" + txnID + "-" + fileName);
 		f.delete();
@@ -238,6 +240,7 @@ public class ReplicaServerClient extends java.rmi.server.UnicastRemoteObject
 			bw.close();
 			return true;
 		} catch (Exception e) {
+			
 			return false;
 		}
 	}

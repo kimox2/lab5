@@ -225,13 +225,70 @@ public class Client {
 
 	}
 
-	public void write1() throws RemoteException, IOException {
+	public void read1(String fileName) throws FileNotFoundException,
+			RemoteException, IOException {
 		mServer = connectMaster();
-		String fileName = "TestHossam.txt";
+		// many reads on the same file
+		// read 5 times
+		// for (int i = 0; i < 5; i++) {
+		// get set of replicas ip addresses
+		ReplicaLoc repServerLocs[] = mServer.read(fileName);
+		// choose one
+		ReplicaLoc repServerLoc = repServerLocs[0];
+		// connect to it
+		ReplicaServerClientInterface repServer = connectReplica(repServerLoc);
+		// read file from it
+
+		FileContent fc = repServer.read(fileName);
+		System.out.println(fc.getFileData());
+		// }
+	}
+
+	public void read2(String fileName) throws FileNotFoundException,
+			RemoteException, IOException {
+		mServer = connectMaster();
+		System.out.println("read from file " + fileName);
+		// many reads on the same file
+		// read 5 times
+		for (int i = 0; i < 1; i++) {
+			// get set of replicas ip addresses
+			ReplicaLoc repServerLocs[] = mServer.read(fileName);
+			// choose one
+			ReplicaLoc repServerLoc = repServerLocs[0];
+			// connect to it
+			ReplicaServerClientInterface repServer = connectReplica(repServerLoc);
+			// read file from it
+
+			FileContent fc = repServer.read(fileName);
+
+			System.out.println(fc.getFileData());
+		}
+	}
+
+	public void write(String fileName) throws RemoteException, IOException {
+
+		mServer = connectMaster();
 		FileContent fcw = new FileContent(fileName, "");
 		WriteMsg wm = mServer.write(fcw);
 		ReplicaServerClientInterface repServer2 = connectReplica(wm.getLoc());
-		fcw.setFileData("Hello Hossam1\n");
+		fcw.setFileData("1\n");
+		repServer2.write(wm.getTransactionId(), 1, fcw);
+		try {
+
+			boolean bl = repServer2.commit(wm.getTransactionId(), 1);
+			System.out.println(bl);
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+
+	public void write1(String fileName) throws RemoteException, IOException {
+		mServer = connectMaster();
+		FileContent fcw = new FileContent(fileName, "");
+		WriteMsg wm = mServer.write(fcw);
+		ReplicaServerClientInterface repServer2 = connectReplica(wm.getLoc());
+		fcw.setFileData("1\n");
 		repServer2.write(wm.getTransactionId(), 1, fcw);
 		try {
 			Thread.sleep(10000);
@@ -239,11 +296,11 @@ public class Client {
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
 		}
-		fcw.setFileData("Hello Hossam3\n");
+		fcw.setFileData("3\n");
 		repServer2.write(wm.getTransactionId(), 3, fcw);
-		fcw.setFileData("Hello Hossam2\n");
+		fcw.setFileData("2\n");
 		repServer2.write(wm.getTransactionId(), 2, fcw);
-		fcw.setFileData("Hello Hossam4\n");
+		fcw.setFileData("4\n");
 		repServer2.write(wm.getTransactionId(), 4, fcw);
 		fcw.setFileData("Hello Hossam5\n");
 		repServer2.write(wm.getTransactionId(), 5, fcw);
@@ -260,17 +317,16 @@ public class Client {
 
 	}
 
-	public void write2() throws RemoteException, IOException {
+	public void write2(String fileName) throws RemoteException, IOException {
 		mServer = connectMaster();
-		String fileName = "TestHossam.txt";
 		FileContent fcw = new FileContent(fileName, "");
 		WriteMsg wm = mServer.write(fcw);
 		ReplicaServerClientInterface repServer2 = connectReplica(wm.getLoc());
-		fcw.setFileData("Hello sala71\n");
+		fcw.setFileData(fileName + "1\n");
 		repServer2.write(wm.getTransactionId(), 1, fcw);
-		fcw.setFileData("Hello sala73\n");
+		fcw.setFileData(fileName + "3\n");
 		repServer2.write(wm.getTransactionId(), 3, fcw);
-		fcw.setFileData("Hello sala72\n");
+		fcw.setFileData(fileName + "2\n");
 		repServer2.write(wm.getTransactionId(), 2, fcw);
 		try {
 
@@ -283,15 +339,62 @@ public class Client {
 
 	}
 
+	// abort2 abort written data
+	public void abort2(String fileName) throws RemoteException, IOException {
+		mServer = connectMaster();
+		FileContent fcw = new FileContent(fileName, "");
+		WriteMsg wm = mServer.write(fcw);
+		ReplicaServerClientInterface repServer2 = connectReplica(wm.getLoc());
+		fcw.setFileData(fileName + "1\n");
+		repServer2.write(wm.getTransactionId(), 1, fcw);
+		fcw.setFileData(fileName + "3\n");
+		repServer2.write(wm.getTransactionId(), 3, fcw);
+		fcw.setFileData(fileName + "2\n");
+		repServer2.write(wm.getTransactionId(), 2, fcw);
+		try {
+
+			boolean bl = repServer2.abort(wm.getTransactionId());
+			System.out.println(bl);
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+	}
+
+	// abort1 abort created file
+	public void abort1(String fileName) throws RemoteException, IOException {
+		fileName = fileName ;
+		mServer = connectMaster();
+		FileContent fcw = new FileContent(fileName, "");
+		WriteMsg wm = mServer.write(fcw);
+		ReplicaServerClientInterface repServer2 = connectReplica(wm.getLoc());
+		
+		fcw.setFileData("Hello Hossam1\n");
+		repServer2.write(wm.getTransactionId(), 1, fcw);
+		fcw.setFileData("Hello Hossam3\n");
+		repServer2.write(wm.getTransactionId(), 3, fcw);
+		fcw.setFileData("Hello Hossam2\n");
+		repServer2.write(wm.getTransactionId(), 2, fcw);
+		try {
+
+			boolean bl = repServer2.abort(wm.getTransactionId());
+			System.out.println(bl);
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+
 	public static void main(String[] args) throws FileNotFoundException,
 			IOException {
 		Client c = new Client();
-//		c.write2();
-		int op = Integer.parseInt(args[0]);
-		if (op == 1)
-			c.write1();
-		else
-			c.write2();
+		c.write2("salah.txt");
+		// int op = Integer.parseInt(args[0]);
+		// if (op == 1)
+		// c.write1();
+		// else
+		// c.write2();
 
 	}
 
