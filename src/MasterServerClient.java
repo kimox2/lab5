@@ -61,7 +61,7 @@ public class MasterServerClient extends java.rmi.server.UnicastRemoteObject
 		while ((s = reader.readLine()) != null) {
 			st = s.split(":");
 			ReplicaServerClient rep = new ReplicaServerClient(st[0], st[1],
-					Integer.parseInt(st[2]), this.mAddress, this.port);
+					Integer.parseInt(st[2]), this.mAddress, this.port,"fis");
 			repAddress.put(st[0], st[1] + ":" + st[2]);
 		}
 		reader.close();
@@ -115,7 +115,6 @@ public class MasterServerClient extends java.rmi.server.UnicastRemoteObject
 		try {
 			sem.acquire();
 		} catch (InterruptedException e1) {
-			// TODO Auto-generated catch block
 			e1.printStackTrace();
 		}
 		WriteMsg wmsg;

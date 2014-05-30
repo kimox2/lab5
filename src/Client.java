@@ -286,6 +286,7 @@ public class Client {
 	public static void main(String[] args) throws FileNotFoundException,
 			IOException {
 		Client c = new Client();
+//		c.write2();
 		int op = Integer.parseInt(args[0]);
 		if (op == 1)
 			c.write1();
