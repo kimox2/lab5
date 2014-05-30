@@ -201,7 +201,15 @@ public class ReplicaServerClient extends java.rmi.server.UnicastRemoteObject
 		if (!transactions.containsKey(txnID))
 			return false;
 
+		int msgsSize = transactions.get(txnID).size();
 		String fileName = transFileMap.get(txnID);
+		for (int i = 1; i <= msgsSize; i++) {
+			String filePath = "tmp" + txnID + "-" + i + "-" + fileName;
+			File tmp = new File(filePath);
+			if (tmp.exists())
+				tmp.delete();
+		}
+
 		try {
 			masterServer.releaseSem(fileName);
 		} catch (Exception e) {
